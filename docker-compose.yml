@@ -1,0 +1,10 @@
+version: '3'
+services:
+  db-server:
+    image: 'redis'
+    restart: unless-stopped
+  flutter-cloud-app:
+    build: .
+    ports:
+      - '4000:4000'
+    restart: unless-stopped
