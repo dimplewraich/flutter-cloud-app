@@ -4,7 +4,7 @@ FROM node:alpine
 # Set working directory to be used in the container, and,
 # copy package.json into the container
 # so that 'npm install' only runs when package.json is changed
-WORKDIR /usr/flutter-cloud-app
+WORKDIR '/app'
 COPY ./package.json .
 
 # Add dependencies

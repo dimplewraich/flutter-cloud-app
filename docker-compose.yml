@@ -1,10 +1,97 @@
-version: '3'
+version: '3.1'
 services:
-  db-server:
-    image: 'redis'
-    restart: unless-stopped
-  flutter-cloud-app:
-    build: .
+  #-----------------------------
+  # Add routing proxy
+  proxy:
+    ## passing custom Dockerfile and context information
+    build:
+      context: ./proxy
+      dockerfile: Dockerfile.dev
+
+    ## Add dependencies
+    depends_on:
+      - api
+      - client
+
+    ## mapping system ports to container ports
     ports:
-      - '4000:4000'
+      - '3050:80'
+
+    ## Set restart policy
+    restart: always
+
+  # Add PostgresQL persistent database container
+  postgres:
+    ## Base image to start with
+    image: 'postgres:alpine'
+
+    ## Start environment variable values for postgreSQL
+    environment:
+      POSTGRES_PASSWORD: postgres_password
+
+    ## Set restart policy
+    restart: always
+
+  #-----------------------------
+  # Add Redis non-persistent database container
+  redis:
+    ## Base image to start with
+    image: 'redis:alpine'
+
+    ## Set restart policy
+    restart: always
+
+  #-----------------------------
+  # Add api container
+  api:
+    ## Build Dockerfile.dev from server directory
+    ## instead of looking for Dockerfile in current directory
+    build:
+      dockerfile: Dockerfile.dev
+      context: ./api
+
+    ## Start dependency services before starting this service
+    depends_on:
+      - postgres
+      - redis
+
+    ## creating references of container folders to local folders
+    volumes:
+      # Create placeholder folder so npm run doesn't fail.
+      - /app/node_modules
+      # Reference api directory to container working directory
+      - ./api:/app
+
+    ## Set environment variables
+    environment:
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - PGUSER=postgres
+      - PGHOST=postgres
+      - PGDATABASE=postgres
+      - PGPASSWORD=postgres_password
+      - PGPORT=5432
+
+    ## Set restart policy
+    restart: unless-stopped
+
+  #-----------------------------
+  # Add client container
+  client:
+    ## Workaround for latest version create react app unexpected crashing
+    stdin_open: true
+
+    ## passing custom Dockerfile and context information
+    build:
+      context: ./client/web-app
+      dockerfile: Dockerfile.dev
+
+    ## creating references of container folders to local folders
+    volumes:
+      # Create placeholder folder so npm run doesn't fail.
+      - /app/node_modules
+      # Reference server directory to container working directory
+      - ./client/web-app:/app
+
+    ## Set restart policy
     restart: unless-stopped
