@@ -2,9 +2,7 @@ language: generic
 sudo: required
 services:
    - docker
-   
-   before_install:
-     - docker build -t dimplewraich/flutter-cloud-app -f ./client/web-app/Dockerfile.dev .
-     
-   script:
-     - docker run -e CI=true dimplewraich/flutter-cloud-app npm run test
+before_install:
+   - docker build -t dimplewraich/flutter-cloud-app -f ./client/web-app/Dockerfile.dev .
+script:
+   - docker run -e CI=true dimplewraich/flutter-cloud-app npm run test
